@@ -1139,16 +1139,19 @@ function handler(event, context) {
                 });
             } else {
                 // create the credentials section
-                var credentials;
-
-                if (useLambdaCredentialsToLoad === true) {
-                    credentials = 'aws_access_key_id=' + aws.config.credentials.accessKeyId + ';aws_secret_access_key=' + aws.config.credentials.secretAccessKey;
+                var credentials = " with credentials as \'";
+                
+                if(config.dataFormat.S === 'PARQUET'){
+                    credentials = 'IAM_ROLE \'' + config.IAMRole.S + '\'';
+                    
+                }else if (useLambdaCredentialsToLoad === true) {
+                    credentials += 'aws_access_key_id=' + aws.config.credentials.accessKeyId + ';aws_secret_access_key=' + aws.config.credentials.secretAccessKey;
 
                     if (aws.config.credentials.sessionToken) {
                         credentials += ';token=' + aws.config.credentials.sessionToken;
                     }
                 } else {
-                    credentials = 'aws_access_key_id=' + config.accessKeyForS3.S + ';aws_secret_access_key=' + decryptedConfigItems[s3secretKeyMapEntry].toString();
+                    credentials += 'aws_access_key_id=' + config.accessKeyForS3.S + ';aws_secret_access_key=' + decryptedConfigItems[s3secretKeyMapEntry].toString();
                 }
 
                 if (typeof clusterInfo.columnList === 'undefined') {
@@ -1218,7 +1221,7 @@ function handler(event, context) {
                 }
 
                 // build the final copy command
-                copyCommand = copyCommand + " with credentials as \'" + credentials + "\' " + copyOptions + ";\n";
+                copyCommand = copyCommand + " " + credentials + " " + copyOptions + ";\n";
 
                 // if the post-sql option is set, insert it into the copyCommand
                 if (clusterInfo.postsql && clusterInfo.postsql.S) {
