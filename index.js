@@ -1163,7 +1163,7 @@ function handler(event, context) {
                     } else {
                         copyOptions = copyOptions + ' \'auto\' \n';
                     }
-                } else if (config.dataFormat.S === 'Parquet' || config.dataFormat.S === 'ORC') {
+                } else if (config.dataFormat.S === 'PARQUET' || config.dataFormat.S === 'ORC') {
                     copyOptions = copyOptions + ' format as ' + config.dataFormat.S;
                 } else {
                     callback(null, {
