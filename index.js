@@ -810,7 +810,7 @@ function handler(event, context) {
     /**
 	 * Function which will create the manifest for a given batch and entries
 	 */
-    function createManifest(config, thisBatchId, s3Info, batchEntries) {
+    async function createManifest(config, thisBatchId, s3Info, batchEntries) {
         logger.info("Creating Manifest for Batch " + thisBatchId);
 
         var manifestInfo = common.createManifestInfo(config);
@@ -832,10 +832,27 @@ function handler(event, context) {
         	
         	logger.debug(u);
         	
-            manifestContents.entries.push({
-                url: u,
-                mandatory: true
-            });
+			//if format is Parquet add content_length meta key to manifest
+        	if(config.dataFormat.S === 'PARQUET'){
+            
+        	    var params = {
+                    Bucket: batchEntries[i].slice(0, batchEntries[i].indexOf('/')) ,
+                    Key: batchEntries[i].slice(batchEntries[i].indexOf('/') + 1, batchEntries[i].length),
+                };
+            
+                var data = await s3.getObject(params).promise();
+
+                manifestContents.entries.push({
+                    url: u,
+                    mandatory: true,
+                    meta:{content_length:data.ContentLength}
+                });
+        	}else{
+        	   manifestContents.entries.push({
+                    url: u,
+                    mandatory: true
+                });
+        	}
         }
 
         var s3PutParams = {
